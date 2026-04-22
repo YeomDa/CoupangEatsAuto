@@ -37,43 +37,38 @@ def get_driver() -> webdriver.Chrome:
     driver = webdriver.Chrome(options=options)
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
     return driver
- 
+
+
 def login(driver: webdriver.Chrome, username: str, password: str) -> bool:
     try:
         driver.get(LOGIN_URL)
         wait = WebDriverWait(driver, 15)
 
-        # 아이디 입력
         id_input = wait.until(EC.presence_of_element_located((By.ID, "loginId")))
         id_input.clear()
         id_input.send_keys(username)
         print("[DEBUG] 아이디 입력 완료")
 
-        # 비밀번호 입력
         pw_input = driver.find_element(By.ID, "password")
         pw_input.clear()
         pw_input.send_keys(password)
         print("[DEBUG] 비밀번호 입력 완료")
 
-        # 현재 페이지 스크린샷 저장 (버튼 클릭 전)
         driver.save_screenshot("/tmp/before_login.png")
-        print("[DEBUG] 스크린샷 저장: /tmp/before_login.png")
 
-        # 로그인 버튼 클릭
         login_btn = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, "merchant-submit-btn")))
         login_btn.click()
         print("[DEBUG] 로그인 버튼 클릭 완료")
 
         time.sleep(5)
-
-        # 클릭 후 스크린샷
         driver.save_screenshot("/tmp/after_login.png")
         print(f"[DEBUG] 클릭 후 URL: {driver.current_url}")
 
-        if "login" not in driver.current_url:
-            print(f"[INFO] 로그인 성공: {username}")
+        try:
+            wait.until(EC.invisibility_of_element_located((By.ID, "loginId")))
+            print("[INFO] 로그인 성공")
             return True
-        else:
+        except TimeoutException:
             print("[ERROR] 로그인 후에도 여전히 로그인 페이지")
             return False
 
@@ -84,68 +79,106 @@ def login(driver: webdriver.Chrome, username: str, password: str) -> bool:
     except Exception as e:
         print(f"[ERROR] 로그인 실패: {e}")
         return False
- 
-def get_settlement_data(driver: webdriver.Chrome) -> dict:
+
+
+def withdraw_all(driver: webdriver.Chrome) -> dict:
+    data = {
+        "crawled_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "withdraw_available": "N/A",
+        "settlement_pending": "N/A",
+        "withdraw_result": "미실행",
+    }
+
     try:
         driver.get(SETTLEMENT_URL)
-        WebDriverWait(driver, 15)
+        wait = WebDriverWait(driver, 15)
         time.sleep(3)
- 
-        data = {
-            "crawled_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "period": _get_current_period(),
-            "withdraw_available": "N/A",
-        }
- 
-        # 출금 가능 금액
-        # <div class="settlement-section-withdraw-value"><span>32,622원</span></div>
+        driver.save_screenshot("/tmp/settlement.png")
+
+        # 출금 가능 금액 읽기
         try:
-            withdraw_el = driver.find_element(
-                By.CSS_SELECTOR, ".settlement-section-withdraw-value span"
-            )
+            withdraw_el = wait.until(EC.presence_of_element_located(
+                (By.CSS_SELECTOR, ".settlement-section-withdraw-value span")
+            ))
             data["withdraw_available"] = withdraw_el.text.strip()
             print(f"[INFO] 출금 가능 금액: {data['withdraw_available']}")
-        except NoSuchElementException:
+        except TimeoutException:
             print("[WARN] 출금 가능 금액 요소를 찾지 못했습니다.")
- 
-        # 정산 섹션 전체 텍스트 (디버그용 - 로그에서 확인)
-        try:
-            section = driver.find_element(
-                By.CSS_SELECTOR, ".settlement-summary-withdraw-section"
-            )
-            print(f"[DEBUG] 정산 섹션 전체:\n{section.text.strip()}")
-        except NoSuchElementException:
-            pass
- 
+
+        # 출금 가능 금액이 0원이면 스킵
+        amount_text = data["withdraw_available"].replace(",", "").replace("원", "").strip()
+        if not amount_text.isdigit() or int(amount_text) == 0:
+            print("[INFO] 출금 가능 금액이 없어 출금을 건너뜁니다.")
+            data["withdraw_result"] = "출금 금액 없음"
+            return data
+
+        # 출금하기 버튼 클릭
+        withdraw_btn = wait.until(EC.element_to_be_clickable(
+            (By.CSS_SELECTOR, ".withdraw-confirm-ok")
+        ))
+        withdraw_btn.click()
+        print("[DEBUG] 출금하기 버튼 클릭")
+        time.sleep(3)
+        driver.save_screenshot("/tmp/after_withdraw_btn.png")
+
+        # iframe으로 전환
+        iframe = wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, ".settlement__iframe-viewer iframe")
+        ))
+        driver.switch_to.frame(iframe)
+        print("[DEBUG] iframe 전환 완료")
+        time.sleep(1)
+
+        # 전액 버튼 클릭
+        total_btn = wait.until(EC.element_to_be_clickable((By.ID, "totalBalance")))
+        total_btn.click()
+        print("[DEBUG] 전액 버튼 클릭")
+        time.sleep(1)
+
+        # 인출 버튼 클릭
+        withdraw_confirm_btn = wait.until(EC.element_to_be_clickable((By.ID, "withdrawButton")))
+        withdraw_confirm_btn.click()
+        print("[DEBUG] 인출 버튼 클릭")
+        time.sleep(2)
+        driver.save_screenshot("/tmp/after_withdraw_confirm.png")
+
+        # 확인 버튼 클릭
+        confirm_btn = wait.until(EC.element_to_be_clickable((By.ID, "confirmButton")))
+        confirm_btn.click()
+        print("[DEBUG] 확인 버튼 클릭")
+        time.sleep(2)
+
+        driver.switch_to.default_content()
+        driver.save_screenshot("/tmp/withdraw_done.png")
+
+        data["withdraw_result"] = "출금 완료"
+        print(f"[INFO] 출금 완료: {data['withdraw_available']}")
         return data
- 
+
     except TimeoutException:
-        print("[ERROR] 정산 페이지 로딩 타임아웃")
-        return {}
+        print("[ERROR] 타임아웃 발생")
+        driver.save_screenshot("/tmp/error.png")
+        data["withdraw_result"] = "실패 (타임아웃)"
+        return data
     except Exception as e:
-        print(f"[ERROR] 정산 데이터 수집 실패: {e}")
-        return {}
- 
- 
-def _get_current_period() -> str:
-    today = datetime.now()
-    start = today.replace(day=1).strftime("%Y.%m.%d")
-    end = today.strftime("%Y.%m.%d")
-    return f"{start} ~ {end}"
- 
- 
+        print(f"[ERROR] 출금 실패: {e}")
+        driver.save_screenshot("/tmp/error.png")
+        data["withdraw_result"] = f"실패: {e}"
+        return data
+
+
 def run_crawl() -> dict:
     username = os.environ.get("COUPANGEATS_ID")
     password = os.environ.get("COUPANGEATS_PW")
- 
+
     if not username or not password:
         raise ValueError("환경변수 COUPANGEATS_ID, COUPANGEATS_PW가 설정되지 않았습니다.")
- 
+
     driver = get_driver()
     try:
         success = login(driver, username, password)
         if not success:
             raise RuntimeError("로그인에 실패했습니다.")
-        return get_settlement_data(driver)
+        return withdraw_all(driver)
     finally:
         driver.quit()
