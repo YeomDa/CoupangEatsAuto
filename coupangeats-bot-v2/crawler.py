@@ -39,31 +39,33 @@ def login(driver: webdriver.Chrome, username: str, password: str) -> bool:
     try:
         driver.get(LOGIN_URL)
         wait = WebDriverWait(driver, 15)
- 
-        id_input = wait.until(EC.presence_of_element_located((By.NAME, "username")))
+
+        # 아이디 입력 (id="loginId")
+        id_input = wait.until(EC.presence_of_element_located((By.ID, "loginId")))
         id_input.clear()
         id_input.send_keys(username)
- 
-        pw_input = driver.find_element(By.NAME, "password")
+
+        # 비밀번호 입력 (id 확인 필요 - 임시로 추정)
+        pw_input = driver.find_element(By.ID, "loginPw")
         pw_input.clear()
         pw_input.send_keys(password)
- 
-        login_btn = driver.find_element(By.XPATH, "//button[@type='submit']")
+
+        # 로그인 버튼 (class="merchant-submit-btn")
+        login_btn = driver.find_element(By.CLASS_NAME, "merchant-submit-btn")
         login_btn.click()
- 
+
         wait.until(EC.url_changes(LOGIN_URL))
         time.sleep(2)
- 
+
         print(f"[INFO] 로그인 성공: {username}")
         return True
- 
+
     except TimeoutException:
         print("[ERROR] 로그인 타임아웃")
         return False
     except Exception as e:
         print(f"[ERROR] 로그인 실패: {e}")
         return False
- 
  
 def get_settlement_data(driver: webdriver.Chrome) -> dict:
     try:
