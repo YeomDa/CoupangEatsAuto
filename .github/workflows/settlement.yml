@@ -2,7 +2,7 @@ name: 쿠팡이츠 정산 알림 봇
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 1 * * *"   # 매일 오전 10시 KST (UTC 01:00)
   workflow_dispatch:
 
 jobs:
