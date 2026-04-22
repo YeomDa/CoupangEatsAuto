@@ -8,6 +8,9 @@ on:
 jobs:
   settlement-notify:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: coupangeats-bot-v2
 
     steps:
       - name: 코드 체크아웃
