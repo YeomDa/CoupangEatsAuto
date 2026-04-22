@@ -54,7 +54,8 @@ def login(driver: webdriver.Chrome, username: str, password: str) -> bool:
         login_btn = driver.find_element(By.CLASS_NAME, "merchant-submit-btn")
         login_btn.click()
 
-        wait.until(EC.url_changes(LOGIN_URL))
+        # URL이 /login을 포함하지 않을 때까지 대기
+        wait.until_not(EC.url_contains("login"))
         time.sleep(2)
 
         print(f"[INFO] 로그인 성공: {username}")
