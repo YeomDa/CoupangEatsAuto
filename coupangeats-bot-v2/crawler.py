@@ -91,13 +91,26 @@ def withdraw_all(driver: webdriver.Chrome) -> dict:
 
     try:
         driver.get(SETTLEMENT_URL)
-        wait = WebDriverWait(driver, 15)
-        time.sleep(3)
+        time.sleep(5)
+        print(f"[DEBUG] 현재 URL: {driver.current_url}")
         driver.save_screenshot("/tmp/settlement.png")
+
+        # 팝업 닫기 (있으면 닫고 없으면 그냥 진행)
+        try:
+            close_btn = WebDriverWait(driver, 5).until(EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, "[data-testid='Dialog__CloseButton']")
+            ))
+            close_btn.click()
+            print("[DEBUG] 팝업 닫기 완료")
+            time.sleep(1)
+        except TimeoutException:
+            print("[DEBUG] 팝업 없음 - 그냥 진행")
+
+        driver.save_screenshot("/tmp/after_popup.png")
 
         # 출금 가능 금액 읽기
         try:
-            withdraw_el = wait.until(EC.presence_of_element_located(
+            withdraw_el = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
                 (By.CSS_SELECTOR, ".settlement-section-withdraw-value span")
             ))
             data["withdraw_available"] = withdraw_el.text.strip()
@@ -113,7 +126,7 @@ def withdraw_all(driver: webdriver.Chrome) -> dict:
             return data
 
         # 출금하기 버튼 클릭
-        withdraw_btn = wait.until(EC.element_to_be_clickable(
+        withdraw_btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
             (By.CSS_SELECTOR, ".withdraw-confirm-ok")
         ))
         withdraw_btn.click()
@@ -122,7 +135,7 @@ def withdraw_all(driver: webdriver.Chrome) -> dict:
         driver.save_screenshot("/tmp/after_withdraw_btn.png")
 
         # iframe으로 전환
-        iframe = wait.until(EC.presence_of_element_located(
+        iframe = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
             (By.CSS_SELECTOR, ".settlement__iframe-viewer iframe")
         ))
         driver.switch_to.frame(iframe)
@@ -130,20 +143,20 @@ def withdraw_all(driver: webdriver.Chrome) -> dict:
         time.sleep(1)
 
         # 전액 버튼 클릭
-        total_btn = wait.until(EC.element_to_be_clickable((By.ID, "totalBalance")))
+        total_btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "totalBalance")))
         total_btn.click()
         print("[DEBUG] 전액 버튼 클릭")
         time.sleep(1)
 
         # 인출 버튼 클릭
-        withdraw_confirm_btn = wait.until(EC.element_to_be_clickable((By.ID, "withdrawButton")))
+        withdraw_confirm_btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "withdrawButton")))
         withdraw_confirm_btn.click()
         print("[DEBUG] 인출 버튼 클릭")
         time.sleep(2)
         driver.save_screenshot("/tmp/after_withdraw_confirm.png")
 
         # 확인 버튼 클릭
-        confirm_btn = wait.until(EC.element_to_be_clickable((By.ID, "confirmButton")))
+        confirm_btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "confirmButton")))
         confirm_btn.click()
         print("[DEBUG] 확인 버튼 클릭")
         time.sleep(2)
