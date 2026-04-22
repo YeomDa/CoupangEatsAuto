@@ -46,19 +46,26 @@ def login(driver: webdriver.Chrome, username: str, password: str) -> bool:
 
         id_input = wait.until(EC.presence_of_element_located((By.ID, "loginId")))
         id_input.clear()
+        time.sleep(0.5)
         id_input.send_keys(username)
         print("[DEBUG] 아이디 입력 완료")
+        time.sleep(1)
 
         pw_input = driver.find_element(By.ID, "password")
         pw_input.clear()
+        time.sleep(0.5)
         pw_input.send_keys(password)
         print("[DEBUG] 비밀번호 입력 완료")
+        time.sleep(1)
 
         driver.save_screenshot("/tmp/before_login.png")
 
         login_btn = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, "merchant-submit-btn")))
+        time.sleep(0.5)
         login_btn.click()
         print("[DEBUG] 로그인 버튼 클릭 완료")
+
+        time.sleep(7)
 
         time.sleep(5)
         driver.save_screenshot("/tmp/after_login.png")
