@@ -21,7 +21,7 @@ SETTLEMENT_URL = f"{PARTNER_URL}/merchant/management/settlement/955171"  # ì •ì‚
 
 def get_driver() -> webdriver.Chrome:
     options = Options()
-    options.add_argument("--headless=new")
+    options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
