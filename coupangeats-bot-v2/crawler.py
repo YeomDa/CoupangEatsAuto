@@ -40,29 +40,43 @@ def login(driver: webdriver.Chrome, username: str, password: str) -> bool:
         driver.get(LOGIN_URL)
         wait = WebDriverWait(driver, 15)
 
-        # 아이디 입력 (id="loginId")
+        # 아이디 입력
         id_input = wait.until(EC.presence_of_element_located((By.ID, "loginId")))
         id_input.clear()
         id_input.send_keys(username)
+        print("[DEBUG] 아이디 입력 완료")
 
-        # 비밀번호 입력 (id 확인 필요 - 임시로 추정)
+        # 비밀번호 입력
         pw_input = driver.find_element(By.ID, "password")
         pw_input.clear()
         pw_input.send_keys(password)
+        print("[DEBUG] 비밀번호 입력 완료")
 
-        # 로그인 버튼 (class="merchant-submit-btn")
-        login_btn = driver.find_element(By.CLASS_NAME, "merchant-submit-btn")
+        # 현재 페이지 스크린샷 저장 (버튼 클릭 전)
+        driver.save_screenshot("/tmp/before_login.png")
+        print("[DEBUG] 스크린샷 저장: /tmp/before_login.png")
+
+        # 로그인 버튼 클릭
+        login_btn = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, "merchant-submit-btn")))
         login_btn.click()
+        print("[DEBUG] 로그인 버튼 클릭 완료")
 
-        # URL이 /login을 포함하지 않을 때까지 대기
-        wait.until_not(EC.url_contains("login"))
-        time.sleep(2)
+        time.sleep(5)
 
-        print(f"[INFO] 로그인 성공: {username}")
-        return True
+        # 클릭 후 스크린샷
+        driver.save_screenshot("/tmp/after_login.png")
+        print(f"[DEBUG] 클릭 후 URL: {driver.current_url}")
+
+        if "login" not in driver.current_url:
+            print(f"[INFO] 로그인 성공: {username}")
+            return True
+        else:
+            print("[ERROR] 로그인 후에도 여전히 로그인 페이지")
+            return False
 
     except TimeoutException:
         print("[ERROR] 로그인 타임아웃")
+        driver.save_screenshot("/tmp/timeout.png")
         return False
     except Exception as e:
         print(f"[ERROR] 로그인 실패: {e}")
