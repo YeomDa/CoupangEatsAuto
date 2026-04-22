@@ -34,9 +34,10 @@ jobs:
 
       - name: 정산 봇 실행
         env:
-          COUPANGEATS_ID: ${{ secrets.COUPANGEATS_ID }}
-          COUPANGEATS_PW: ${{ secrets.COUPANGEATS_PW }}
-        run: python controller.py
+            COUPANGEATS_ID: ${{ secrets.COUPANGEATS_ID }}
+            COUPANGEATS_PW: ${{ secrets.COUPANGEATS_PW }}
+        run: |
+            python controller.py
 
       - name: 스크린샷 업로드 (디버그)
         if: always()
