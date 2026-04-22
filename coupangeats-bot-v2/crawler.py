@@ -46,7 +46,7 @@ def login(driver: webdriver.Chrome, username: str, password: str) -> bool:
         id_input.send_keys(username)
 
         # 비밀번호 입력 (id 확인 필요 - 임시로 추정)
-        pw_input = driver.find_element(By.ID, "loginPw")
+        pw_input = driver.find_element(By.ID, "password")
         pw_input.clear()
         pw_input.send_keys(password)
 
