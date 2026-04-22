@@ -16,7 +16,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 PARTNER_URL = "https://store.coupangeats.com"
 LOGIN_URL = f"{PARTNER_URL}/merchant/login"
-SETTLEMENT_URL = f"{PARTNER_URL}/merchant/management/orders/955171"  # 정산 페이지 URL (실제 경로 확인 필요)
+SETTLEMENT_URL = f"{PARTNER_URL}/merchant/management/settlement/955171"  # 정산 페이지 URL (실제 경로 확인 필요)
 
 
 def get_driver() -> webdriver.Chrome:
