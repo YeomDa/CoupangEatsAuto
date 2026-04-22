@@ -37,3 +37,10 @@ jobs:
           COUPANGEATS_ID: ${{ secrets.COUPANGEATS_ID }}
           COUPANGEATS_PW: ${{ secrets.COUPANGEATS_PW }}
         run: python controller.py
+
+      - name: 스크린샷 업로드 (디버그)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: /tmp/*.png
