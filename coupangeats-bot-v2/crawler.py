@@ -16,17 +16,19 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 PARTNER_URL = "https://store.coupangeats.com"
 LOGIN_URL = f"{PARTNER_URL}/merchant/login"
-SETTLEMENT_URL = f"{PARTNER_URL}/merchant/management/settlement/955171"  # 정산 페이지 URL (실제 경로 확인 필요)
+SETTLEMENT_URL = f"{PARTNER_URL}/merchant/management/settlement/955171"
 
 
 def get_driver() -> webdriver.Chrome:
     options = Options()
-    options.add_argument("--headless")
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
     options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option("useAutomationExtension", False)
     options.add_argument(
         "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -77,6 +79,7 @@ def login(driver: webdriver.Chrome, username: str, password: str) -> bool:
     except Exception as e:
         print(f"[ERROR] 로그인 실패: {e}")
         return False
+
 
 
 def withdraw_all(driver: webdriver.Chrome) -> dict:
